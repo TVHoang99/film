@@ -1,11 +1,18 @@
 <?php
+
+use Fuel\Core\Controller;
+
 class Controller_Movie extends Controller
 {
 	protected $repository_movie;
+	protected $repository_episode;
+	protected $repository_comment;
 
 	public function __construct()
 	{
 		$this->repository_movie = new Repository_Movie();
+		$this->repository_episode = new Repository_Episode();
+		$this->repository_comment = new Repository_Comment();
 	}
 
 	public function action_detail($slug, $id)
@@ -16,11 +23,10 @@ class Controller_Movie extends Controller
 				['slug', '=', $slug],
 				['id', '=', sprintf('%06d', $id)],
 			],
+			'related' => ['categories', 'episodes'],
 		]);
-		// echo '<pre>'; print_r($movie); echo '</pre>'; die;
 
 		if ($movie) {
-			// echo '<pre>'; print_r($movie['id']); echo '</pre>'; die;
 			$this->repository_movie->update($movie->id, [
 				'views_count' => $movie->views_count + 1,
 			]);
@@ -38,91 +44,186 @@ class Controller_Movie extends Controller
 			'related' => ['categories', 'ratings', 'comments' => ['related' => 'user']],
 		]);
 
+		// Phim tương tự (cùng thể loại, khác ID, max 8)
+		$category_ids = array_column($movie->categories, 'id');
+		$similar_movies = [];
+		if (!empty($category_ids)) {
+			$similar_movies = $this->repository_movie->find_all([
+				'related' => ['categories'],
+				'where' => [
+					['categories.id', 'IN', $category_ids],
+					['id', '!=', $movie->id],
+				],
+				'order_by' => [
+					['views_count', 'DESC']
+				],
+				'limit' => 8,
+			]);
+		}
+
 		$data = [
 			'movie' => $movie,
 			'comments' => $movie->comments,
 			'avg_rating' => $movie->average_rating(),
 			'rating_count' => $movie->rating_count(),
+			'similar_movies' => $similar_movies,
 		];
 
 		// Render view
 		return Service_Layout::render(View::forge('client/movie/detail', $data));
 	}
 
-	public function action_rate($slug, $id)
+	public function action_watch($slug, $id, $episode = 1, $language = 'vietsub')
 	{
-		$movie = Model_Movie::query()
-			->where('slug', $slug)
-			->where('id', sprintf('%06d', $id))
-			->get_one();
+		// echo "<pre>"; var_dump($slug, $id, $episode, $language); echo "</pre>"; die;
+		$movie = $this->repository_movie->find_by_options([
+			'where' => [
+				['slug', '=', $slug],
+				['id', '=', sprintf('%06d', $id)],
+			],
+			'related' => ['categories', 'episodes'],
+		]);
 
 		if (!$movie) {
 			Session::set_flash('error', 'Phim không tồn tại.');
 			Response::redirect('/');
 		}
 
-		if (Input::method() === 'POST') {
-			$user_id = Auth::get('id'); // Giả định dùng Auth
-			if (!$user_id) {
-				Session::set_flash('error', 'Bạn cần đăng nhập để đánh giá.');
-				Response::redirect('movie/' . $slug . '-' . sprintf('%06d', $id));
-			}
+		// Tăng lượt xem
+		$this->repository_movie->update($movie->id, [
+			'views_count' => $movie->views_count + 1,
+		]);
 
-			$rating = Input::post('rating');
-			$existing_rating = Model_Rating::query()
-				->where('user_id', $user_id)
-				->where('movie_id', $movie->id)
-				->get_one();
+		// Lấy tập phim
+		$episodes = $movie->episodes;
+		$current_episode = null;
+		if ($episode) {
+			// $current_episode = Model_Movie_Episode::query()
+			// 	->where('movie_id', $movie->id)
+			// 	->where('episode_number', $episode)
+			// 	->where('language', $language)
+			// 	->get_one();
 
-			if ($existing_rating) {
-				Session::set_flash('error', 'Bạn đã đánh giá phim này rồi.');
-			} else {
-				$rating_obj = Model_Rating::forge([
-					'user_id' => $user_id,
-					'movie_id' => $movie->id,
-					'rating' => $rating,
-				]);
-				if ($rating_obj->save()) {
-					Session::set_flash('success', 'Đánh giá đã được gửi!');
-				} else {
-					Session::set_flash('error', 'Lỗi khi gửi đánh giá.');
-				}
-			}
+			$current_episode = $this->repository_episode->find_by_options([
+				'where' => [
+					['movie_id', '=', $movie->id],
+					['episode_number', '=', $episode],
+					['language', '=', $language],
+				],
+			]);
 		}
-		Response::redirect('movie/' . $slug . '-' . sprintf('%06d', $id));
+		if (!$current_episode && !empty($episodes)) {
+			$current_episode = reset($episodes); // Lấy tập đầu tiên mặc định
+		}
+
+		// Lấy bình luận
+		// $comments = Model_Comment::query()
+		// 	->where('movie_id', $movie->id)
+		// 	->related('user')
+		// 	->order_by('created_at', 'DESC')
+		// 	->limit(10)
+		// 	->get();
+		$comments = $this->repository_comment->find_all([
+			'where' => [
+				['movie_id', '=', $movie->id],
+			],
+			'related' => ['user'],
+			'order_by' => [
+				['created_at', 'DESC']
+			],
+			'limit' => 10,
+		]);
+		// echo "<pre>"; var_dump($comments); echo "</pre>"; die;
+
+
+		// Lấy đánh giá trung bình
+		$avg_rating = \DB::select(\DB::expr('AVG(rating) as avg_rating'))
+			->from('ratings')
+			->where('movie_id', $movie->id)
+			->execute()
+			->get('avg_rating', 0);
+
+		$data = [
+			'movie' => $movie,
+			'episodes' => $episodes,
+			'current_episode' => $current_episode,
+			'comments' => $comments,
+			'avg_rating' => round($avg_rating, 1),
+		];
+
+		return Service_Layout::render(View::forge('client/movie/watch', $data));
 	}
 
-	public function action_comment($slug, $id)
+	public function action_rate($movie_id)
 	{
-		$movie = Model_Movie::query()
-			->where('slug', $slug)
-			->where('id', sprintf('%06d', $id))
-			->get_one();
-
-		if (!$movie) {
-			Session::set_flash('error', 'Phim không tồn tại.');
-			Response::redirect('/');
+		if (!Auth::check()) {
+			Session::set_flash('error', 'Vui lòng đăng nhập để đánh giá.');
+			Response::redirect('login');
 		}
 
 		if (Input::method() === 'POST') {
-			$user_id = Auth::get('id'); // Giả định dùng Auth
-			if (!$user_id) {
-				Session::set_flash('error', 'Bạn cần đăng nhập để bình luận.');
-				Response::redirect('movie/' . $slug . '-' . sprintf('%06d', $id));
+			$rating = Input::post('rating');
+			$user_id = Auth::get_user_id()[1];
+
+			$existing = Model_Rating::query()
+				->where('movie_id', $movie_id)
+				->where('user_id', $user_id)
+				->get_one();
+
+			if ($existing) {
+				$existing->rating = $rating;
+				$existing->save();
+			} else {
+				$new_rating = Model_Rating::forge([
+					'movie_id' => $movie_id,
+					'user_id' => $user_id,
+					'rating' => $rating,
+				]);
+				$new_rating->save();
 			}
 
-			$comment = Input::post('comment');
-			$comment_obj = Model_Comment::forge([
-				'user_id' => $user_id,
-				'movie_id' => $movie->id,
-				'comment' => $comment,
+			Session::set_flash('success', 'Đánh giá của bạn đã được gửi.');
+		}
+
+		Response::redirect('movie/' . Model_Movie::find($movie_id)->slug . '-' . sprintf('%06d', $movie_id) . '/watch');
+	}
+
+	public function action_comment($movie_id)
+	{
+		if (!Auth::check()) {
+			Session::set_flash('error', 'Vui lòng đăng nhập để bình luận.');
+			Response::redirect('login');
+		}
+
+		if (Input::method() === 'POST') {
+			$comment = Model_Comment::forge([
+				'movie_id' => $movie_id,
+				'user_id' => Auth::get_user_id()[1],
+				'content' => Input::post('content'),
 			]);
-			if ($comment_obj->save()) {
-				Session::set_flash('success', 'Bình luận đã được gửi!');
+
+			if ($comment->save()) {
+				Session::set_flash('success', 'Bình luận của bạn đã được gửi.');
 			} else {
-				Session::set_flash('error', 'Lỗi khi gửi bình luận.');
+				Session::set_flash('error', 'Không thể gửi bình luận.');
 			}
 		}
-		Response::redirect('movie/' . $slug . '-' . sprintf('%06d', $id));
+
+		Response::redirect('movie/' . Model_Movie::find($movie_id)->slug . '-' . sprintf('%06d', $movie_id) . '/watch');
+	}
+
+	public function action_search()
+	{
+		$q = Input::get('q', '');
+		$movies = Model_Movie::query();
+
+		if ($q && strpos($q, '#') === 0) {
+			$movies->where('hashtag', 'LIKE', "%{$q}%");
+		} else {
+			$movies->where('title', 'LIKE', "%{$q}%");
+		}
+
+		$data = ['movies' => $movies->get()];
+		return View::forge('search/results', $data);
 	}
 }

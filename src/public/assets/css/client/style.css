@@ -41,8 +41,14 @@ body {
     border-radius: 5px;
     z-index: 2;
 }
-.carousel-control-prev, .carousel-control-next {
+
+.carousel-control-prev,
+.carousel-control-next {
     width: 5%;
+}
+
+.header-container {
+    padding: 0 25px;
 }
 
 .movie-card {
@@ -86,12 +92,16 @@ body {
     font-size: 2.5rem;
 }
 
-.card-body a{
+.card-body a {
     text-decoration: none;
 }
 
 a .card-title {
     color: #000;
+}
+
+a .card-title:hover {
+    color: #ff9216;
 }
 
 .footer {
@@ -105,11 +115,13 @@ a .card-title {
     font-size: 0.9rem;
 }
 
-.footer ul, .footer h5{
+.footer ul,
+.footer h5 {
     margin-left: 10rem;
 }
 
-.footer ul li, .footer h5 {
+.footer ul li,
+.footer h5 {
     margin-bottom: 1rem;
 }
 
@@ -174,4 +186,144 @@ a .card-title {
 .movie-slider .slick-prev:before,
 .movie-slider .slick-next:before {
     font-size: 24px;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    line-height: 32px;
+}
+
+.breadcrumb .next-icon {
+    width: 1rem;
+    margin: 0 5px;
+}
+
+.breadcrumb-item a {
+    color: #aaa;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.breadcrumb-item a:hover {
+    color: #ff9216;
+}
+
+.breadcrumb-item a:first-child i {
+    margin-right: 8px;
+}
+
+.breadcrumb-item.active {
+    /* color: #ff9216; */
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Hover cho phim tương tự */
+.hover-shadow {
+    transition: all 0.3s ease;
+}
+
+.hover-shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Sticky sidebar */
+.sticky-top {
+    z-index: 100;
+}
+
+/* Sidebar: List group */
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid #e9ecef;
+    padding: 10px 15px;
+    transition: background-color 0.2s;
+}
+
+.list-group-item:hover {
+    background-color: #f1f3f5;
+}
+
+.list-group-item .badge {
+    min-width: 30px;
+    text-align: center;
+}
+
+.movie-title, .related-title {
+    color: #ff9216;
+}
+
+.text-gray {
+    color: #aaa;
+}
+
+table a {
+    color: #fff;
+}
+
+table a:hover {
+    color: #ff9216;
+}
+
+.w-35 {
+    width: 35% !important;
+}
+
+.w-65 {
+    width: 65% !important;
+}
+
+.movie-status {
+    font-size: 0.9rem;
+}
+
+.bg-light-gray {
+    background-color: #2b2f32;
+}
+
+.bg-black {
+    background-color: #000;
+}
+
+/* Video player */
+.ratio-16x9 video {
+    background: #000;
+}
+
+/* Episode tabs */
+.nav-tabs .nav-link {
+    color: #007bff;
+}
+.nav-tabs .nav-link.active {
+    background-color: #007bff;
+    color: #fff;
+    border-color: #007bff;
+}
+.btn-sm {
+    padding: 5px 10px;
+}
+
+/* Star rating */
+.star-rating .fa-star {
+    font-size: 1.2rem;
+    margin-right: 5px;
+}
+
+/* Comments */
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.content .carousel-item {
+    padding: 0 12px;
+}
+
+.content .category {
+    margin: 0 10px;
 }

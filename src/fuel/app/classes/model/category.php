@@ -27,9 +27,9 @@ class Model_Category extends Orm\Model
             'events' => ['before_insert'],
             'mysql_timestamp' => true,
         ],
-        'Orm\Observer_Validation' => [
-            'events' => ['before_save'],
-        ],
+        // 'Orm\Observer_Validation' => [
+        //     'events' => ['before_save'],
+        // ],
     ];
 
     // Quan hệ: Một danh mục có nhiều phim (many-to-many qua movie_categories)

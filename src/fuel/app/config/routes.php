@@ -13,6 +13,7 @@
 return array(
 	'_root_' => 'home/index',
 	'movie/(:any)-(:num)' => 'movie/detail/$1/$2', // Khớp /movie/phim-hanh-dong-000001
+    'movie/:slug-:id/watch(/:episode(/:language))?' => 'movie/watch/$1/$2/$3/$4',
     'movie/rate/(:any)-(:num)' => 'movie/rate/$1/$2',
     'movie/comment/(:any)-(:num)' => 'movie/comment/$1/$2',
 );

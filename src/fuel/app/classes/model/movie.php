@@ -5,55 +5,39 @@ class Model_Movie extends Orm\Model
     protected static $_primary_key = ['id'];
 
     protected static $_properties = [
-        'id' => [
-            'data_type' => 'int',
-            'auto_increment' => true,
-        ],
-        'title' => [
+        'id' => ['data_type' => 'int', 'auto_increment' => true],
+        'title' => ['data_type' => 'varchar', 'validation' => ['required', 'max_length' => 255]],
+        'title_vnm' => [
             'data_type' => 'varchar',
-            'validation' => ['required', 'max_length' => 255],
+            'validation' => ['max_length' => 255],
         ],
         'slug' => [
             'data_type' => 'varchar',
-            'validation' => ['required', 'max_length' => 255, 'unique' => 'movies.slug', 'match_pattern' => '/^[a-z0-9-]+$/'],
+            'validation' => ['required', 'max_length' => 255, 'unique' => 'movies.slug', 'match_pattern' => '/^[a-z0-9-]+$/']
         ],
-        'imdb_rating' => [
-            'data_type' => 'decimal',
-            'validation' => ['numeric_min' => 0, 'numeric_max' => 10],
-        ],
-        'duration' => [
-            'data_type' => 'int',
-        ],
-        'release_date' => [
-            'data_type' => 'date',
-        ],
-        'summary' => [
-            'data_type' => 'text',
-        ],
-        'poster_url' => [
+        'imdb_rating' => ['data_type' => 'decimal', 'validation' => ['numeric_min' => 0, 'numeric_max' => 10]],
+        'duration' => ['data_type' => 'int', 'validation' => ['numeric_min' => 1]],
+        'release_date' => ['data_type' => 'date'],
+        'summary' => ['data_type' => 'text'],
+        'director' => ['data_type' => 'varchar', 'validation' => ['max_length' => 255]],
+        'actors' => ['data_type' => 'text'],
+        'status' => [
             'data_type' => 'varchar',
-            'validation' => ['max_length' => 255],
+            'validation' => ['required', 'in_list' => ['hd', 'fullhd', '4k', 'cam', 'trailer']],
+            'default' => 'hd',
         ],
-        'video_url' => [
+        'hashtag' => [
             'data_type' => 'varchar',
-            'validation' => ['max_length' => 255],
+            'validation' => [
+                'max_length' => 255,
+                'match_pattern' => '/^#[a-zA-Z0-9_]+(#[a-zA-Z0-9_]+)*$/'
+            ],
         ],
-        'is_featured' => [
-            'data_type' => 'tinyint',
-            'default' => 0,
-        ],
-        'views_count' => [
-            'data_type' => 'int',
-            'default' => 0,
-        ],
-        'created_at' => [
-            'data_type' => 'timestamp',
-            'default' => 'CURRENT_TIMESTAMP',
-        ],
-        'updated_at' => [
-            'data_type' => 'timestamp',
-            'default' => 'CURRENT_TIMESTAMP',
-        ],
+        'poster_url' => ['data_type' => 'varchar', 'validation' => ['max_length' => 500]],
+        'is_featured' => ['data_type' => 'tinyint', 'validation' => ['in_list' => [0, 1]], 'default' => 0],
+        'views_count' => ['data_type' => 'int', 'validation' => ['numeric_min' => 0], 'default' => 0],
+        'created_at' => ['data_type' => 'timestamp', 'default' => 'CURRENT_TIMESTAMP'],
+        'updated_at' => ['data_type' => 'timestamp', 'default' => 'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'null' => true],
     ];
 
     protected static $_observers = [
@@ -97,6 +81,13 @@ class Model_Movie extends Orm\Model
             'key_to' => 'movie_id',
             'cascade_save' => true,
             'cascade_delete' => true,
+        ],
+        'episodes' => [
+            'model_to' => 'Model_Movie_Episode',
+            'key_from' => 'id',
+            'key_to' => 'movie_id',
+            'cascade_delete' => true,
+            'cascade_save' => true,
         ],
     ];
 

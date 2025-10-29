@@ -68,6 +68,10 @@ abstract class Repository_Base
             $query->related($options['related']);
         }
 
+        if (!empty($options['limit'])) {
+            $query->limit($options['limit']);
+        }
+
         return $query->get();
     }
 
