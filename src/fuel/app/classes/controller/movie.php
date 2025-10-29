@@ -149,6 +149,7 @@ class Controller_Movie extends Controller
 			'current_episode' => $current_episode,
 			'comments' => $comments,
 			'avg_rating' => round($avg_rating, 1),
+			'is_logged_in' => Session::get('user_id') ? true : false,
 		];
 
 		return Service_Layout::render(View::forge('client/movie/watch', $data));
@@ -156,61 +157,73 @@ class Controller_Movie extends Controller
 
 	public function action_rate($movie_id)
 	{
-		if (!Auth::check()) {
-			Session::set_flash('error', 'Vui lòng đăng nhập để đánh giá.');
-			Response::redirect('login');
-		}
+		if (!Session::get('user_id')) {
+            Session::set_flash('error', 'Vui lòng đăng nhập để đánh giá.');
+            Response::redirect('auth/login');
+        }
 
-		if (Input::method() === 'POST') {
-			$rating = Input::post('rating');
-			$user_id = Auth::get_user_id()[1];
+        if (Input::method() === 'POST') {
+            $rating = Input::post('rating');
+            $user_id = Session::get('user_id');
 
-			$existing = Model_Rating::query()
-				->where('movie_id', $movie_id)
-				->where('user_id', $user_id)
-				->get_one();
+            $existing = Model_Rating::query()
+                ->where('movie_id', $movie_id)
+                ->where('user_id', $user_id)
+                ->get_one();
 
-			if ($existing) {
-				$existing->rating = $rating;
-				$existing->save();
-			} else {
-				$new_rating = Model_Rating::forge([
-					'movie_id' => $movie_id,
-					'user_id' => $user_id,
-					'rating' => $rating,
-				]);
-				$new_rating->save();
-			}
+            if ($existing) {
+                $existing->rating = $rating;
+                $existing->save();
+            } else {
+                $new_rating = Model_Rating::forge([
+                    'movie_id' => $movie_id,
+                    'user_id' => $user_id,
+                    'rating' => $rating,
+                ]);
+                $new_rating->save();
+            }
 
-			Session::set_flash('success', 'Đánh giá của bạn đã được gửi.');
-		}
+            Session::set_flash('success', 'Đánh giá của bạn đã được gửi.');
+        }
 
-		Response::redirect('movie/' . Model_Movie::find($movie_id)->slug . '-' . sprintf('%06d', $movie_id) . '/watch');
+        Response::redirect('movie/' . Model_Movie::find($movie_id)->slug . '-' . sprintf('%06d', $movie_id) . '/watch');
 	}
 
 	public function action_comment($movie_id)
 	{
-		if (!Auth::check()) {
-			Session::set_flash('error', 'Vui lòng đăng nhập để bình luận.');
-			Response::redirect('login');
-		}
+		if (!Session::get('user_id')) {
+            Session::set_flash('error', 'Vui lòng đăng nhập để bình luận.');
+            Response::redirect('auth/login');
+        }
 
-		if (Input::method() === 'POST') {
-			$comment = Model_Comment::forge([
-				'movie_id' => $movie_id,
-				'user_id' => Auth::get_user_id()[1],
-				'content' => Input::post('content'),
-			]);
+        if (Input::method() === 'POST') {
+            $comment = Model_Comment::forge([
+                'movie_id' => $movie_id,
+                'user_id' => Session::get('user_id'),
+                'content' => Input::post('content'),
+            ]);
 
-			if ($comment->save()) {
-				Session::set_flash('success', 'Bình luận của bạn đã được gửi.');
-			} else {
-				Session::set_flash('error', 'Không thể gửi bình luận.');
-			}
-		}
+            if ($comment->save()) {
+                Session::set_flash('success', 'Bình luận của bạn đã được gửi.');
+            } else {
+                Session::set_flash('error', 'Không thể gửi bình luận.');
+            }
+        }
 
-		Response::redirect('movie/' . Model_Movie::find($movie_id)->slug . '-' . sprintf('%06d', $movie_id) . '/watch');
+        Response::redirect('movie/' . Model_Movie::find($movie_id)->slug . '-' . sprintf('%06d', $movie_id) . '/watch');
 	}
+
+	public function action_share($movie_id)
+    {
+        if (!Session::get('user_id')) {
+            Session::set_flash('error', 'Vui lòng đăng nhập để chia sẻ.');
+            Response::redirect('auth/login');
+        }
+
+        // Logic chia sẻ (giả lập, có thể tích hợp API mạng xã hội sau)
+        Session::set_flash('success', 'Chia sẻ thành công!');
+        Response::redirect('movie/' . Model_Movie::find($movie_id)->slug . '-' . sprintf('%06d', $movie_id) . '/watch');
+    }
 
 	public function action_search()
 	{

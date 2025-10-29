@@ -65,7 +65,7 @@ body {
     left: 0;
     background: rgba(22, 22, 22, .3);
     width: 100%;
-    min-height: 456px;
+    min-height: 448px;
     opacity: 0;
     transition: opacity ease-in-out 0.3s;
 }

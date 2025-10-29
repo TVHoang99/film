@@ -23,7 +23,7 @@
         <h3 class="fw-bold mb-3"><?= e($movie->title_vnm ?: $movie->title) ?> - <?= e($current_episode ? $current_episode->episode_number : 'Phim lẻ') ?></h3>
         <?php if ($current_episode): ?>
             <div class="ratio ratio-16x9">
-                <?= html_entity_decode($current_episode->video_url, ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?>
+                <?= html_entity_decode($current_episode->video_url, ENT_COMPAT,"UTF-8");?>
             </div>
         <?php else: ?>
             <p class="text-muted">Chưa có tập phim nào.</p>
@@ -76,17 +76,21 @@
     <!-- 3. Chia sẻ -->
     <div class="mb-5">
         <h4 class="fw-bold mb-3">Chia sẻ</h4>
-        <div class="d-flex gap-2">
-            <a href="https://www.facebook.com/sharer/sharer.php?u=<?= urlencode(Uri::current()) ?>" target="_blank" class="btn btn-primary">
-                <i class="fab fa-facebook-f"></i> Facebook
-            </a>
-            <a href="https://twitter.com/intent/tweet?url=<?= urlencode(Uri::current()) ?>&text=<?= urlencode($movie->title_vnm ?: $movie->title) ?>" target="_blank" class="btn btn-info">
-                <i class="fab fa-twitter"></i> Twitter
-            </a>
-            <a href="https://wa.me/?text=<?= urlencode('Xem ' . ($movie->title_vnm ?: $movie->title) . ': ' . Uri::current()) ?>" target="_blank" class="btn btn-success">
-                <i class="fab fa-whatsapp"></i> WhatsApp
-            </a>
-        </div>
+        <?php if ($is_logged_in): ?>
+            <div class="d-flex gap-2">
+                <a href="/movie/share/<?= $movie->id ?>?platform=facebook" class="btn btn-primary">
+                    <i class="fab fa-facebook-f"></i> Facebook
+                </a>
+                <a href="/movie/share/<?= $movie->id ?>?platform=twitter" class="btn btn-info">
+                    <i class="fab fa-twitter"></i> Twitter
+                </a>
+                <a href="/movie/share/<?= $movie->id ?>?platform=whatsapp" class="btn btn-success">
+                    <i class="fab fa-whatsapp"></i> WhatsApp
+                </a>
+            </div>
+        <?php else: ?>
+            <p class="text-muted">Vui lòng <a href="<?= \Uri::create('auth/login') ?>">đăng nhập</a> để chia sẻ phim.</p>
+        <?php endif; ?>
     </div>
 
     <!-- 4. Đánh giá phim (Star rating) -->
@@ -100,7 +104,7 @@
                 <?php endfor; ?>
             </div>
         </div>
-        <?php if (Auth::check()): ?>
+        <?php if ($is_logged_in): ?>
             <form action="/movie/rate/<?= $movie->id ?>" method="POST" class="d-flex align-items-center gap-2">
                 <select name="rating" class="form-select w-auto">
                     <option value="">Chọn điểm</option>
@@ -111,14 +115,14 @@
                 <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
             </form>
         <?php else: ?>
-            <p class="text-muted">Vui lòng <a href="/login">đăng nhập</a> để đánh giá phim.</p>
+            <p class="text-muted">Vui lòng <a href="<?= \Uri::create('auth/login') ?>">đăng nhập</a> để đánh giá phim.</p>
         <?php endif; ?>
     </div>
 
     <!-- 5. Bình luận phim -->
     <div class="mb-5">
         <h4 class="fw-bold mb-3">Bình luận</h4>
-        <?php if (Auth::check()): ?>
+        <?php if ($is_logged_in): ?>
             <form action="/movie/comment/<?= $movie->id ?>" method="POST" class="mb-4">
                 <div class="mb-3">
                     <textarea name="content" class="form-control" rows="4" placeholder="Viết bình luận của bạn..." required></textarea>
@@ -126,13 +130,12 @@
                 <button type="submit" class="btn btn-primary">Gửi bình luận</button>
             </form>
         <?php else: ?>
-            <p class="text-muted">Vui lòng <a href="/login">đăng nhập</a> để bình luận.</p>
+            <p class="text-muted">Vui lòng <a href="<?= \Uri::create('auth/login') ?>">đăng nhập</a> để bình luận.</p>
         <?php endif; ?>
 
         <?php if (!empty($comments)): ?>
             <div class="list-group">
                 <?php foreach ($comments as $comment): ?>
-
                     <div class="list-group-item mb-2 p-3">
                         <div class="d-flex justify-content-between">
                             <strong><?= e($comment->user->username) ?></strong>

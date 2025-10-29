@@ -46,7 +46,7 @@
                     <h3 class="fw-bold text-uppercase mb-2 movie-title"><?= e($movie->title) ?></h3>
                     <small class="text-gray"><?= e($movie->title_vnm . " (" . date('Y', strtotime($movie->release_date)) . ")") ?></small>
 
-                    <table class="bg-light-gray mt-3 rounded">
+                    <table class="bg-light-gray mt-3 rounded w-100">
                         <tbody class="p-3 w-100">
                             <tr>
                                 <th class="text-gray p-3 pb-0 w-35">Trạng thái</th>
