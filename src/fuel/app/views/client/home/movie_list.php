@@ -43,7 +43,7 @@ function truncateString($string, $maxLength = 29)
                                             </a>
                                             <div class="movie-info d-flex justify-content-between align-items-center">
                                                 <p class="card-text text-secondary"><?= $movie['imdb_rating']; ?> | <?= $movie['duration']; ?> phút</p>
-                                                <p class="text-muted">
+                                                <p class="text-gray">
                                                     <i class="far fa-eye"></i> <?= number_format($movie['views_count']) ?>
                                                 </p>
                                             </div>

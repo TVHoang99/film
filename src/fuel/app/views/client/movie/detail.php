@@ -5,8 +5,8 @@
             <li class="breadcrumb-item">
                 <a href="/" class="text-decoration-none"><i class="fas fa-home"></i>Trang chủ</a>
             </li>
-            <span class="carousel-control-next-icon next-icon"></span>
             <?php if (!empty($movie->categories)): ?>
+                <span class="carousel-control-next-icon next-icon"></span>
                 <li class="breadcrumb-item">
                     <a href="/movies?category=<?= urlencode(end($movie->categories)->name) ?>" class="text-decoration-none">
                         <?= e(end($movie->categories)->name) ?>
@@ -53,7 +53,7 @@
                                 <td class="p-3 pb-0">
                                     <?php $languages = []; ?>
                                     <?php foreach ($movie->episodes as $episode): ?>
-                                        <?php if(!in_array($episode->language, $languages)): ?>
+                                        <?php if (!in_array($episode->language, $languages)): ?>
                                             <?php array_push($languages, $episode->language); ?>
                                         <?php endif; ?>
                                     <?php endforeach; ?>
@@ -148,10 +148,10 @@
                 <?php endif; ?>
             </div>
 
-            <!-- PHẦN CUỐI: Phim đề cử -->
+            <!-- PHẦN CUỐI: Phim tương tự -->
             <div class="mt-5">
                 <h4 class="fw-bold mb-4 related-title">
-                    <i class="fas fa-star"></i> Phim đề cử
+                    <i class="fas fa-star"></i> Phim tương tự
                 </h4>
                 <?php if (!empty($similar_movies)): ?>
                     <div class="row g-3">
@@ -164,7 +164,7 @@
                                             <h6 class="card-title text-dark mb-1 text-truncate"><?= e($similar->title) ?></h6>
                                             <div class="movie-info d-flex justify-content-between align-items-center">
                                                 <small class="card-text text-secondary"><?= $similar->imdb_rating; ?> | <?= $similar->duration; ?> phút</small>
-                                                <small class="text-muted">
+                                                <small class="text-gray">
                                                     <i class="far fa-eye"></i> <?= number_format($similar->views_count) ?>
                                                 </small>
                                             </div>
@@ -175,7 +175,7 @@
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
-                    <p class="text-muted">Chưa có phim tương tự.</p>
+                    <p class="text-gray">Chưa có phim tương tự.</p>
                 <?php endif; ?>
             </div>
 
@@ -184,47 +184,26 @@
         <div class="col-lg-4">
             <div class="sticky-top" style="top: 100px;">
                 <h5 class="fw-bold mb-3 text-danger">
-                    <i class="fas fa-fire"></i> Phim thịnh hành
+                    <i class="fas fa-fire"></i> Top thịnh hành
                 </h5>
 
                 <!-- Lấy danh sách category của phim hiện tại -->
-                <?php
-                $category_names = array_column($movie->categories, 'name');
-                $trending_movies_by_category = [];
-
-                foreach ($category_names as $cat_name) {
-                    $top = \Model_Movie::query()
-                        ->related('categories')
-                        ->where('categories.name', $cat_name)
-                        ->where('id', '!=', $movie->id) // Loại trừ phim hiện tại
-                        ->order_by('views_count', 'DESC')
-                        ->limit(5) // Top 5 phim
-                        ->get();
-
-                    if ($top) {
-                        $trending_movies_by_category[$cat_name] = $top;
-                    }
-                }
-                ?>
-
                 <?php if (!empty($trending_movies_by_category)): ?>
                     <?php foreach ($trending_movies_by_category as $cat_name => $movies): ?>
                         <div class="mb-4 p-3 bg-dark rounded shadow-sm">
-                            <h6 class="fw-bold text-primary mb-3">
-                                <i class="fas fa-star"></i> Top <?= e($cat_name) ?>
+                            <h6 class="fw-bold mb-3 category">
+                                <i class="fas fa-star"></i> Top <?= e(lcfirst($cat_name)) ?>
                             </h6>
                             <div class="list-group list-group-flush">
-                                <?php foreach ($movies as $i => $m): ?>
-                                    <a href="/movie/<?= $m->slug ?>-<?= sprintf('%06d', $m->id) ?>" class="list-group-item list-group-item-action d-flex align-items-center p-2">
-                                        <span class="badge bg-<?= $i < 3 ? 'warning' : 'secondary' ?> me-2"><?= $i + 1 ?></span>
-                                        <div class="d-flex flex-column flex-fill">
-                                            <span class="text-dark text-truncate"><?= e($m->title) ?></span>
-                                            <div class="movie-info d-flex justify-content-between align-items-center">
-                                                <small class="card-text text-secondary"><?= $m->imdb_rating; ?> | <?= $m->duration; ?> phút</small>
-                                                <small class="text-muted">
-                                                    <i class="far fa-eye"></i> <?= number_format($m->views_count) ?>
-                                                </small>
-                                            </div>
+                                <?php foreach ($movies as $m): ?>
+                                    <a href="/movie/<?= $m->slug ?>-<?= sprintf('%06d', $m->id) ?>" class="list-group-item list-group-item-action d-flex align-items-center p-2 bg-light-gray">
+                                        <img src="<?= $m->poster_url ?>" class="rounded me-2" style="width: 40px; height: 60px; object-fit: cover;" alt="<?= $m->title ?>">
+                                        <div class="flex-fill">
+                                            <div class="fw-bold text-truncate" style="max-width: 250px;"><?= $m->title ?></div>
+                                            <small class="text-gray">
+                                                <i class="fas fa-star text-warning me-1"></i> <?= $m->imdb_rating ?> |
+                                                <i class="far fa-eye me-1"></i> <?= $m->views_count ?>
+                                            </small>
                                         </div>
                                     </a>
                                 <?php endforeach; ?>
@@ -232,7 +211,7 @@
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <p class="text-muted">Chưa có phim thịnh hành.</p>
+                    <p class="text-gray">Chưa có phim thịnh hành.</p>
                 <?php endif; ?>
             </div>
         </div>

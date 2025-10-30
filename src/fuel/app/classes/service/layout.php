@@ -25,6 +25,8 @@ class Service_Layout
 		$layout->set('header', View::forge('client/components/header'));
 		$layout->set('content', $content);
 		$layout->set('footer', View::forge('client/components/footer'));
+		$layout->set('login', View::forge('client/components/auth/login'));
+		$layout->set('register', View::forge('client/components/auth/register'));
 
         return View::forge('client/home/index', [
 			'layout' => $layout,

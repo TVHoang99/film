@@ -61,12 +61,35 @@ class Controller_Movie extends Controller
 			]);
 		}
 
+		// Top thịnh hành
+		$category_names = array_column($movie->categories, 'name');
+		$trending_movies_by_category = [];
+
+		foreach ($category_names as $cat_name) {
+			$top = $this->repository_movie->find_all([
+				'related' => ['categories'],
+				'where' => [
+					['categories.id', 'IN', $category_ids],
+					['id', '!=', $movie->id],
+				],
+				'order_by' => [
+					['views_count', 'DESC']
+				],
+				'limit' => 5,
+			]);
+
+			if ($top) {
+				$trending_movies_by_category[$cat_name] = $top;
+			}
+		}
+
 		$data = [
 			'movie' => $movie,
 			'comments' => $movie->comments,
 			'avg_rating' => $movie->average_rating(),
 			'rating_count' => $movie->rating_count(),
 			'similar_movies' => $similar_movies,
+			'trending_movies_by_category' => $trending_movies_by_category,
 		];
 
 		// Render view
@@ -158,72 +181,104 @@ class Controller_Movie extends Controller
 	public function action_rate($movie_id)
 	{
 		if (!Session::get('user_id')) {
-            Session::set_flash('error', 'Vui lòng đăng nhập để đánh giá.');
-            Response::redirect('auth/login');
-        }
+			Session::set_flash('error', 'Vui lòng đăng nhập để đánh giá.');
+			Response::redirect('auth/login');
+		}
 
-        if (Input::method() === 'POST') {
-            $rating = Input::post('rating');
-            $user_id = Session::get('user_id');
+		if (Input::method() === 'POST') {
+			$rating = Input::post('rating');
+			$user_id = Session::get('user_id');
 
-            $existing = Model_Rating::query()
-                ->where('movie_id', $movie_id)
-                ->where('user_id', $user_id)
-                ->get_one();
+			$existing = Model_Rating::query()
+				->where('movie_id', $movie_id)
+				->where('user_id', $user_id)
+				->get_one();
 
-            if ($existing) {
-                $existing->rating = $rating;
-                $existing->save();
-            } else {
-                $new_rating = Model_Rating::forge([
-                    'movie_id' => $movie_id,
-                    'user_id' => $user_id,
-                    'rating' => $rating,
-                ]);
-                $new_rating->save();
-            }
+			if ($existing) {
+				$existing->rating = $rating;
+				$existing->save();
+			} else {
+				$new_rating = Model_Rating::forge([
+					'movie_id' => $movie_id,
+					'user_id' => $user_id,
+					'rating' => $rating,
+				]);
+				$new_rating->save();
+			}
 
-            Session::set_flash('success', 'Đánh giá của bạn đã được gửi.');
-        }
+			Session::set_flash('success', 'Đánh giá của bạn đã được gửi.');
+		}
 
-        Response::redirect('movie/' . Model_Movie::find($movie_id)->slug . '-' . sprintf('%06d', $movie_id) . '/watch');
+		Response::redirect('movie/' . Model_Movie::find($movie_id)->slug . '-' . sprintf('%06d', $movie_id) . '/watch');
 	}
 
 	public function action_comment($movie_id)
 	{
-		if (!Session::get('user_id')) {
-            Session::set_flash('error', 'Vui lòng đăng nhập để bình luận.');
-            Response::redirect('auth/login');
-        }
+		// Kiểm tra phim tồn tại
+		$movie = Model_Movie::find($movie_id);
+		if (!$movie) {
+			Session::set_flash('error', 'Phim không tồn tại.');
+			Response::redirect('welcome/404');
+		}
 
-        if (Input::method() === 'POST') {
-            $comment = Model_Comment::forge([
-                'movie_id' => $movie_id,
-                'user_id' => Session::get('user_id'),
-                'content' => Input::post('content'),
-            ]);
+		// Xử lý POST (gửi bình luận)
+		if (Input::method() === 'POST') {
+			// Kiểm tra đăng nhập
+			if (!Session::get('user_id')) {
+				Session::set_flash('error', 'Vui lòng đăng nhập để bình luận.');
+				Response::redirect('movie/' . $movie->slug . '-' . sprintf('%06d', $movie->id) . '/watch');
+			}
 
-            if ($comment->save()) {
-                Session::set_flash('success', 'Bình luận của bạn đã được gửi.');
-            } else {
-                Session::set_flash('error', 'Không thể gửi bình luận.');
-            }
-        }
+			$content = Input::post('content', '');
+			if (empty($content) || strlen($content) < 3) {
+				Session::set_flash('error', 'Bình luận phải có ít nhất 3 ký tự.');
+				Response::redirect('movie/' . $movie->slug . '-' . sprintf('%06d', $movie->id) . '/watch');
+			}
 
-        Response::redirect('movie/' . Model_Movie::find($movie_id)->slug . '-' . sprintf('%06d', $movie_id) . '/watch');
+			// Lưu bình luận
+			$comment = Model_Comment::forge([
+				'movie_id' => $movie_id,
+				'user_id' => Session::get('user_id'),
+				'content' => $content,
+				'created_at' => time(),
+			]);
+
+			if ($comment->save()) {
+				Session::set_flash('success', 'Bình luận đã được gửi.');
+			} else {
+				Session::set_flash('error', 'Lỗi khi gửi bình luận.');
+			}
+
+			Response::redirect('movie/' . $movie->slug . '-' . sprintf('%06d', $movie->id) . '/watch');
+		}
+
+		// Xử lý GET (lấy danh sách bình luận)
+		$comments = Model_Comment::query()
+			->where('movie_id', $movie_id)
+			->related('user')
+			->order_by('created_at', 'DESC')
+			->limit(20)
+			->get();
+
+		$data = [
+			'movie' => $movie,
+			'comments' => $comments,
+		];
+
+		return Response::forge(View::forge('movie/watch', $data));
 	}
 
 	public function action_share($movie_id)
-    {
-        if (!Session::get('user_id')) {
-            Session::set_flash('error', 'Vui lòng đăng nhập để chia sẻ.');
-            Response::redirect('auth/login');
-        }
+	{
+		if (!Session::get('user_id')) {
+			Session::set_flash('error', 'Vui lòng đăng nhập để chia sẻ.');
+			Response::redirect('auth/login');
+		}
 
-        // Logic chia sẻ (giả lập, có thể tích hợp API mạng xã hội sau)
-        Session::set_flash('success', 'Chia sẻ thành công!');
-        Response::redirect('movie/' . Model_Movie::find($movie_id)->slug . '-' . sprintf('%06d', $movie_id) . '/watch');
-    }
+		// Logic chia sẻ (giả lập, có thể tích hợp API mạng xã hội sau)
+		Session::set_flash('success', 'Chia sẻ thành công!');
+		Response::redirect('movie/' . Model_Movie::find($movie_id)->slug . '-' . sprintf('%06d', $movie_id) . '/watch');
+	}
 
 	public function action_search()
 	{
@@ -238,5 +293,47 @@ class Controller_Movie extends Controller
 
 		$data = ['movies' => $movies->get()];
 		return View::forge('search/results', $data);
+	}
+
+	public function action_ajax_search()
+	{
+		$query = Input::get('q', '');
+
+		if (strlen($query) < 2) {
+			return Response::forge(json_encode([]));
+		}
+
+		$movies = Model_Movie::query()
+			->where_open()
+			->where('title', 'like', "%{$query}%")
+			->or_where('title_vnm', 'like', "%{$query}%")
+			->or_where('slug', 'like', "%{$query}%")
+			->where_close()
+			->order_by('views_count', 'DESC')
+			->limit(5)
+			->get([
+				'id',
+				'title',
+				'title_vnm',
+				'slug',
+				'poster_url',
+				'views_count',
+				'imdb_rating'
+			]);
+
+		$results = [];
+		foreach ($movies as $movie) {
+			$results[] = [
+				'id' => $movie->id,
+				'title' => $movie->title_vnm ?: $movie->title,
+				'slug' => $movie->slug,
+				'url' => \Uri::create('movie/' . $movie->slug . '-' . sprintf('%06d', $movie->id)),
+				'poster' => $movie->poster_url,
+				'views' => number_format($movie->views_count),
+				'rating' => $movie->imdb_rating,
+			];
+		}
+
+		return Response::forge(json_encode($results));
 	}
 }

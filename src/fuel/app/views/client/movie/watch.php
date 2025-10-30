@@ -26,7 +26,7 @@
                 <?= html_entity_decode($current_episode->video_url, ENT_COMPAT,"UTF-8");?>
             </div>
         <?php else: ?>
-            <p class="text-muted">Chưa có tập phim nào.</p>
+            <p class="text-gray">Chưa có tập phim nào.</p>
         <?php endif; ?>
     </div>
 
@@ -89,7 +89,7 @@
                 </a>
             </div>
         <?php else: ?>
-            <p class="text-muted">Vui lòng <a href="<?= \Uri::create('auth/login') ?>">đăng nhập</a> để chia sẻ phim.</p>
+            <p class="text-gray">Vui lòng <a href="<?= \Uri::create('auth/login') ?>">đăng nhập</a> để chia sẻ phim.</p>
         <?php endif; ?>
     </div>
 
@@ -115,7 +115,7 @@
                 <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
             </form>
         <?php else: ?>
-            <p class="text-muted">Vui lòng <a href="<?= \Uri::create('auth/login') ?>">đăng nhập</a> để đánh giá phim.</p>
+            <p class="text-gray">Vui lòng <a href="<?= \Uri::create('auth/login') ?>">đăng nhập</a> để đánh giá phim.</p>
         <?php endif; ?>
     </div>
 
@@ -130,7 +130,7 @@
                 <button type="submit" class="btn btn-primary">Gửi bình luận</button>
             </form>
         <?php else: ?>
-            <p class="text-muted">Vui lòng <a href="<?= \Uri::create('auth/login') ?>">đăng nhập</a> để bình luận.</p>
+            <p class="text-gray">Vui lòng <a href="<?= \Uri::create('auth/login') ?>">đăng nhập</a> để bình luận.</p>
         <?php endif; ?>
 
         <?php if (!empty($comments)): ?>
@@ -139,14 +139,14 @@
                     <div class="list-group-item mb-2 p-3">
                         <div class="d-flex justify-content-between">
                             <strong><?= e($comment->user->username) ?></strong>
-                            <small class="text-muted"><?= date('d/m/Y H:i', strtotime($comment->created_at)) ?></small>
+                            <small class="text-gray"><?= date('d/m/Y H:i', strtotime($comment->created_at)) ?></small>
                         </div>
                         <p class="mb-0"><?= nl2br(e($comment->comment)) ?></p>
                     </div>
                 <?php endforeach; ?>
             </div>
         <?php else: ?>
-            <p class="text-muted">Chưa có bình luận nào.</p>
+            <p class="text-gray">Chưa có bình luận nào.</p>
         <?php endif; ?>
     </div>
 </section>

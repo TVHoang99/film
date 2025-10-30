@@ -12,6 +12,92 @@ body {
     height: 50px;
 }
 
+/* Search Dropdown */
+#search-dropdown {
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1060 !important;
+    background-color: #fff;
+}
+
+#search-dropdown .dropdown-item {
+    border-bottom: 1px solid #eee;
+    text-decoration: none;
+    color: #333;
+    transition: background-color 0.2s;
+    padding: 10px !important;
+}
+
+#search-dropdown .dropdown-item:hover {
+    background-color: #f1f3f5;
+    color: #000;
+}
+
+#search-dropdown .dropdown-item:last-child {
+    border-bottom: none;
+}
+
+#search-dropdown .text-truncate {
+    max-width: 250px;
+}
+
+#search-dropdown img {
+    flex-shrink: 0;
+    border: 1px solid #eee;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: #fff;
+    transition: color 0.2s;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: #ddd;
+}
+
+/* Modal */
+.modal-content {
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    border-bottom: none;
+}
+
+.modal-footer {
+    border-top: none;
+    justify-content: center;
+}
+
+/* User info */
+.navbar-text {
+    font-size: 1rem;
+    color: #fff !important;
+}
+
+/* Search suggestions */
+#search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1060;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#search-suggestions .dropdown-item {
+    padding: 8px 12px;
+    color: #333;
+}
+
+#search-suggestions .dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
 #banner.carousel {
     margin-top: 77px;
 }
@@ -138,6 +224,17 @@ a .card-title:hover {
     color: #6c757d;
 }
 
+#search-form {
+    position: relative;
+}
+
+#search-form #search-dropdown {
+    margin-top: 1.2rem;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
 #search-form .input-group {
     border-radius: 50px !important;
 }
@@ -238,11 +335,21 @@ a .card-title:hover {
 }
 
 /* Sidebar: List group */
-.list-group-item {
+.sticky-top .list-group-item {
     border: none;
-    border-bottom: 1px solid #e9ecef;
+    color: #f1f3f5;
+    border-bottom: 1px dashed #ff9216;
     padding: 10px 15px;
     transition: background-color 0.2s;
+}
+
+.sticky-top .list-group-item:hover {
+    color: #ff9216;
+    background-color: #2b2f32;
+}
+
+.sticky-top .category {
+    color: #ff9216;
 }
 
 .list-group-item:hover {
@@ -254,7 +361,8 @@ a .card-title:hover {
     text-align: center;
 }
 
-.movie-title, .related-title {
+.movie-title,
+.related-title {
     color: #ff9216;
 }
 
@@ -299,11 +407,13 @@ table a:hover {
 .nav-tabs .nav-link {
     color: #007bff;
 }
+
 .nav-tabs .nav-link.active {
     background-color: #007bff;
     color: #fff;
     border-color: #007bff;
 }
+
 .btn-sm {
     padding: 5px 10px;
 }

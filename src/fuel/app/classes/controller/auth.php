@@ -18,7 +18,7 @@ class Controller_Auth extends Controller
             // Kiểm tra mật khẩu xác nhận
             if ($password !== $confirm_password) {
                 Session::set_flash('error', 'Mật khẩu xác nhận không khớp.');
-                Response::redirect('auth/register');
+                Response::redirect('register');
             }
 
             // Kiểm tra trùng username hoặc email
@@ -29,7 +29,7 @@ class Controller_Auth extends Controller
 
             if ($existing_user) {
                 Session::set_flash('error', 'Tên đăng nhập hoặc email đã tồn tại.');
-                Response::redirect('auth/register');
+                Response::redirect('register');
             }
 
             // Tạo user mới
@@ -39,25 +39,28 @@ class Controller_Auth extends Controller
                 'password_hash' => password_hash($password, PASSWORD_BCRYPT),
                 'full_name' => $full_name,
             ]);
+            // echo "<pre>"; print_r($user); echo "</pre>"; die;
 
             if ($user->save()) {
                 // Đăng nhập tự động
                 Session::set('user_id', $user->id);
                 Session::set('username', $user->username);
-                Session::set_flash('success', 'Đăng ký thành công! Chào mừng bạn.');
+                // Session::set_flash('success', 'Đăng ký thành công! Chào mừng bạn.');
                 Response::redirect('/');
             } else {
-                Session::set_flash('error', 'Không thể tạo tài khoản. Vui lòng thử lại.');
+                // Session::set_flash('error', 'Không thể tạo tài khoản. Vui lòng thử lại.');
+                Response::redirect('register');
             }
         }
 
+        // Trả về view cho trang đăng ký trực tiếp
         return Response::forge(View::forge('auth/register'));
     }
 
     public function action_login()
     {
         if (Session::get('user_id')) {
-            Session::set_flash('error', 'Bạn đã đăng nhập.');
+            // Session::set_flash('error', 'Bạn đã đăng nhập.');
             Response::redirect('/');
         }
 
@@ -86,7 +89,7 @@ class Controller_Auth extends Controller
     {
         Session::delete('user_id');
         Session::delete('username');
-        Session::set_flash('success', 'Đăng xuất thành công.');
+        // Session::set_flash('success', 'Đăng xuất thành công.');
         Response::redirect('/');
     }
 }

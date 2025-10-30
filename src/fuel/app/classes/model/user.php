@@ -26,12 +26,11 @@ class Model_User extends Orm\Model
             'validation' => ['max_length' => 100],
         ],
         'created_at' => [
-            'data_type' => 'timestamp',
-            'default' => 'CURRENT_TIMESTAMP',
+            'data_type' => 'int',
         ],
         'updated_at' => [
-            'data_type' => 'timestamp',
-            'default' => 'CURRENT_TIMESTAMP',
+            'data_type' => 'int',
+            'null' => true
         ],
     ];
 
@@ -44,9 +43,9 @@ class Model_User extends Orm\Model
             'events' => ['before_update'],
             'mysql_timestamp' => true,
         ],
-        'Orm\Observer_Validation' => [
-            'events' => ['before_save'],
-        ],
+        // 'Orm\Observer_Validation' => [
+        //     'events' => ['before_save'],
+        // ],
     ];
 
     // Quan hệ: Một user có nhiều ratings
