@@ -26,6 +26,8 @@ class Controller_Movie extends Controller
 			'related' => ['categories', 'episodes'],
 		]);
 
+
+
 		if ($movie) {
 			$this->repository_movie->update($movie->id, [
 				'views_count' => $movie->views_count + 1,
@@ -57,11 +59,14 @@ class Controller_Movie extends Controller
 				'order_by' => [
 					['views_count', 'DESC']
 				],
-				'limit' => 8,
 			]);
 		}
 
 		// Top thịnh hành
+		// echo "<pre>";
+		// print_r(array_column($movie->categories, 'name'));
+		// echo "</pre>";
+		// die;
 		$category_names = array_column($movie->categories, 'name');
 		$trending_movies_by_category = [];
 
@@ -69,26 +74,53 @@ class Controller_Movie extends Controller
 			$top = $this->repository_movie->find_all([
 				'related' => ['categories'],
 				'where' => [
-					['categories.id', 'IN', $category_ids],
+					['categories.name', $cat_name],
 					['id', '!=', $movie->id],
 				],
 				'order_by' => [
 					['views_count', 'DESC']
 				],
-				'limit' => 5,
 			]);
 
+			// $top = \DB::query('
+			// 	SELECT
+			// 		* 
+			// 	FROM
+			// 		`movies` AS T1
+			// 		LEFT JOIN `movie_categories` AS `T2` ON `T1`.`id` = `T2`.`movie_id`
+			// 		LEFT JOIN `categories` AS `T3` ON `T2`.`category_id` = `T3`.`id` 
+			// 	WHERE
+			// 		`T1`.`id` != 6 
+			// 		AND T3.`name` = "Hành động" 
+			// 	LIMIT 5
+			// ');
+
+
+			// echo "<pre>";
+			// print_r($top);
+			// echo "</pre>";
+			// die;
+
+			// echo DB::last_query();
+			// die;
+
 			if ($top) {
-				$trending_movies_by_category[$cat_name] = $top;
+				// Lay dung moi category 6 bo phim
+				$trending_movies_by_category[$cat_name] = array_slice($top, 0, 10);
 			}
 		}
+		// echo "<pre>";
+		// print_r($trending_movies_by_category);
+		// echo "</pre>";
+		// die;
+
 
 		$data = [
 			'movie' => $movie,
 			'comments' => $movie->comments,
 			'avg_rating' => $movie->average_rating(),
 			'rating_count' => $movie->rating_count(),
-			'similar_movies' => $similar_movies,
+			'similar_movies' => array_slice($similar_movies, 0, 8),
 			'trending_movies_by_category' => $trending_movies_by_category,
 		];
 
@@ -138,6 +170,11 @@ class Controller_Movie extends Controller
 		if (!$current_episode && !empty($episodes)) {
 			$current_episode = reset($episodes); // Lấy tập đầu tiên mặc định
 		}
+
+		// echo "<pre>";
+		// print_r($current_episode);
+		// echo "</pre>";
+		// die;
 
 		// Lấy bình luận
 		// $comments = Model_Comment::query()
@@ -212,12 +249,24 @@ class Controller_Movie extends Controller
 		Response::redirect('movie/' . Model_Movie::find($movie_id)->slug . '-' . sprintf('%06d', $movie_id) . '/watch');
 	}
 
-	public function action_comment($movie_id)
+	public function action_comment($movie_id, $slug)
 	{
-		// Kiểm tra phim tồn tại
+		// Thêm log để debug
+		\Log::debug('action_comment called: movie_id=' . $movie_id . ', slug=' . $slug . ', is_ajax=' . (Input::is_ajax() ? 'true' : 'false') . ', method=' . Input::method());
+
+		// Kiểm tra nếu là AJAX request
+		$is_ajax = Input::is_ajax();
+
+		// Kiểm tra phim tồn tại và slug khớp
 		$movie = Model_Movie::find($movie_id);
-		if (!$movie) {
-			Session::set_flash('error', 'Phim không tồn tại.');
+		if (!$movie || $movie->slug !== $slug) {
+			if ($is_ajax) {
+				return Response::forge(json_encode([
+					'success' => false,
+					'error' => 'Phim không tồn tại hoặc slug không khớp.'
+				]), 404, ['Content-Type' => 'application/json']);
+			}
+			Session::set_flash('error', 'Phim không tồn tại hoặc slug không khớp.');
 			Response::redirect('welcome/404');
 		}
 
@@ -225,12 +274,24 @@ class Controller_Movie extends Controller
 		if (Input::method() === 'POST') {
 			// Kiểm tra đăng nhập
 			if (!Session::get('user_id')) {
+				if ($is_ajax) {
+					return Response::forge(json_encode([
+						'success' => false,
+						'error' => 'Vui lòng đăng nhập để bình luận.'
+					]), 401, ['Content-Type' => 'application/json']);
+				}
 				Session::set_flash('error', 'Vui lòng đăng nhập để bình luận.');
-				Response::redirect('movie/' . $movie->slug . '-' . sprintf('%06d', $movie->id) . '/watch');
+				Response::redirect('auth/login');
 			}
 
-			$content = Input::post('content', '');
-			if (empty($content) || strlen($content) < 3) {
+			$comment_text = Input::post('content', '');
+			if (empty($comment_text) || strlen($comment_text) < 3) {
+				if ($is_ajax) {
+					return Response::forge(json_encode([
+						'success' => false,
+						'error' => 'Bình luận phải có ít nhất 3 ký tự.'
+					]), 400, ['Content-Type' => 'application/json']);
+				}
 				Session::set_flash('error', 'Bình luận phải có ít nhất 3 ký tự.');
 				Response::redirect('movie/' . $movie->slug . '-' . sprintf('%06d', $movie->id) . '/watch');
 			}
@@ -239,20 +300,34 @@ class Controller_Movie extends Controller
 			$comment = Model_Comment::forge([
 				'movie_id' => $movie_id,
 				'user_id' => Session::get('user_id'),
-				'content' => $content,
+				'comment' => $comment_text,
 				'created_at' => time(),
 			]);
 
 			if ($comment->save()) {
+				if ($is_ajax) {
+					return Response::forge(json_encode([
+						'success' => true,
+						'user_name' => Session::get('username'),
+						'comment' => $comment_text,
+						'created_at' => date('d/m/Y H:i', time()),
+					]), 200, ['Content-Type' => 'application/json']);
+				}
 				Session::set_flash('success', 'Bình luận đã được gửi.');
 			} else {
+				if ($is_ajax) {
+					return Response::forge(json_encode([
+						'success' => false,
+						'error' => 'Lỗi khi gửi bình luận.'
+					]), 500, ['Content-Type' => 'application/json']);
+				}
 				Session::set_flash('error', 'Lỗi khi gửi bình luận.');
 			}
 
 			Response::redirect('movie/' . $movie->slug . '-' . sprintf('%06d', $movie->id) . '/watch');
 		}
 
-		// Xử lý GET (lấy danh sách bình luận)
+		// Xử lý GET (trả về view cho yêu cầu không phải AJAX)
 		$comments = Model_Comment::query()
 			->where('movie_id', $movie_id)
 			->related('user')
@@ -263,6 +338,7 @@ class Controller_Movie extends Controller
 		$data = [
 			'movie' => $movie,
 			'comments' => $comments,
+			'is_logged_in' => Session::get('user_id') ? true : false,
 		];
 
 		return Response::forge(View::forge('movie/watch', $data));

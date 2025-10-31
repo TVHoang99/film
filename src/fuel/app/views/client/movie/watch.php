@@ -3,7 +3,7 @@
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb bg-dark p-3 rounded shadow-sm">
             <li class="breadcrumb-item">
-                <a href="/" class="text-decoration-none"><i class="fas fa-home"></i>Trang chủ</a>
+                <a href="/" class="text-decoration-none"><i class="fas fa-home"></i> Trang chủ</a>
             </li>
             <span class="carousel-control-next-icon next-icon"></span>
             <li class="breadcrumb-item">
@@ -23,7 +23,7 @@
         <h3 class="fw-bold mb-3"><?= e($movie->title_vnm ?: $movie->title) ?> - <?= e($current_episode ? $current_episode->episode_number : 'Phim lẻ') ?></h3>
         <?php if ($current_episode): ?>
             <div class="ratio ratio-16x9">
-                <?= html_entity_decode($current_episode->video_url, ENT_COMPAT,"UTF-8");?>
+                <?= html_entity_decode($current_episode->video_url, ENT_COMPAT, "UTF-8"); ?>
             </div>
         <?php else: ?>
             <p class="text-gray">Chưa có tập phim nào.</p>
@@ -49,7 +49,7 @@
                         <?php foreach ($episodes as $ep): ?>
                             <?php if ($ep->language === 'vietsub'): ?>
                                 <a href="/movie/<?= $movie->slug ?>-<?= sprintf('%06d', $movie->id) ?>/watch/<?= $ep->episode_number ?>/vietsub"
-                                    class="btn btn-sm <?= $current_episode && $current_episode->episode_number === $ep->episode_number ? 'btn-primary' : 'btn-outline-secondary' ?>">
+                                    class="btn btn-sm <?= $current_episode && $current_episode->episode_number === $ep->episode_number ? 'btn-danger' : 'btn-outline-secondary' ?>">
                                     <?= e($ep->episode_number) ?>
                                 </a>
                             <?php endif; ?>
@@ -62,7 +62,7 @@
                         <?php foreach ($episodes as $ep): ?>
                             <?php if ($ep->language === 'thuyết minh'): ?>
                                 <a href="/movie/<?= $movie->slug ?>-<?= sprintf('%06d', $movie->id) ?>/watch/<?= $ep->episode_number ?>/thuyết minh"
-                                    class="btn btn-sm <?= $current_episode && $current_episode->episode_number === $ep->episode_number ? 'btn-primary' : 'btn-outline-secondary' ?>">
+                                    class="btn btn-sm <?= $current_episode && $current_episode->episode_number === $ep->episode_number ? 'btn-danger' : 'btn-outline-secondary' ?>">
                                     <?= e($ep->episode_number) ?>
                                 </a>
                             <?php endif; ?>
@@ -89,7 +89,7 @@
                 </a>
             </div>
         <?php else: ?>
-            <p class="text-gray">Vui lòng <a href="<?= \Uri::create('auth/login') ?>">đăng nhập</a> để chia sẻ phim.</p>
+            <p class="text-gray">Vui lòng <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">đăng nhập</a> để chia sẻ phim.</p>
         <?php endif; ?>
     </div>
 
@@ -115,7 +115,7 @@
                 <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
             </form>
         <?php else: ?>
-            <p class="text-gray">Vui lòng <a href="<?= \Uri::create('auth/login') ?>">đăng nhập</a> để đánh giá phim.</p>
+            <p class="text-gray">Vui lòng <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">đăng nhập</a> để đánh giá phim.</p>
         <?php endif; ?>
     </div>
 
@@ -123,18 +123,20 @@
     <div class="mb-5">
         <h4 class="fw-bold mb-3">Bình luận</h4>
         <?php if ($is_logged_in): ?>
-            <form action="/movie/comment/<?= $movie->id ?>" method="POST" class="mb-4">
+            <form action="<?= \Uri::create('/movie/comment/' . $movie->slug . '-' . sprintf('%06d', $movie->id)); ?>" method="POST" id="comment-form" data-movie-id="<?= $movie->id ?>" class="mb-4">
                 <div class="mb-3">
                     <textarea name="content" class="form-control" rows="4" placeholder="Viết bình luận của bạn..." required></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary">Gửi bình luận</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-comment"></i> Gửi bình luận</button>
             </form>
         <?php else: ?>
-            <p class="text-gray">Vui lòng <a href="<?= \Uri::create('auth/login') ?>">đăng nhập</a> để bình luận.</p>
+            <div class="alert alert-info">
+                Vui lòng <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">đăng nhập</a> để bình luận.
+            </div>
         <?php endif; ?>
 
-        <?php if (!empty($comments)): ?>
-            <div class="list-group">
+        <div id="comment-list" class="list-group">
+            <?php if (!empty($comments)): ?>
                 <?php foreach ($comments as $comment): ?>
                     <div class="list-group-item mb-2 p-3">
                         <div class="d-flex justify-content-between">
@@ -144,9 +146,9 @@
                         <p class="mb-0"><?= nl2br(e($comment->comment)) ?></p>
                     </div>
                 <?php endforeach; ?>
-            </div>
-        <?php else: ?>
-            <p class="text-gray">Chưa có bình luận nào.</p>
-        <?php endif; ?>
+            <?php else: ?>
+                <p class="text-gray">Chưa có bình luận nào.</p>
+            <?php endif; ?>
+        </div>
     </div>
 </section>

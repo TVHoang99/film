@@ -19,6 +19,8 @@ return array (
         13 => '014_add_episode_to_movies',
         14 => '015_create_movie_episodes',
         15 => '016_remove_language_episode_video_url_from_movies',
+        16 => '017_add_banner_url_to_movies',
+        17 => '018_create_admins',
       ),
     ),
     'module' => array(    

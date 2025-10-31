@@ -32,9 +32,9 @@ class Model_Comment extends Orm\Model
             'events' => ['before_insert'],
             'mysql_timestamp' => true,
         ],
-        'Orm\Observer_Validation' => [
-            'events' => ['before_save'],
-        ],
+        // 'Orm\Observer_Validation' => [
+        //     'events' => ['before_save'],
+        // ],
     ];
 
     protected static $_belongs_to = [

@@ -1,5 +1,5 @@
 <!-- Modal Đăng Nhập -->
-<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+<div class="modal fade<?php echo !empty(Session::get_flash('error')) ? ' show' : '' ?>" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark">
             <div class="modal-header">
@@ -19,6 +19,7 @@
                         <label for="login_password" class="form-label">Mật khẩu</label>
                         <input type="password" name="password" id="login_password" class="form-control" required>
                     </div>
+                    <input type="hidden" name="current_url" value="<?php echo (empty($_SERVER['HTTPS']) ? 'http' : 'https') . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]"; ?>">
                     <button type="submit" class="btn btn-primary w-100">Đăng Nhập</button>
                 </form>
             </div>

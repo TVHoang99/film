@@ -16,15 +16,20 @@ return array(
 	'movie/(:any)-(:num)' => 'movie/detail/$1/$2', // Khớp /movie/phim-hanh-dong-000001
     'movie/:slug-:id/watch(/:episode(/:language))?' => 'movie/watch/$1/$2/$3/$4',
     'movie/rate/(:any)-(:num)' => 'movie/rate/$1/$2',
-    'movie/comment/(:any)-(:num)' => 'movie/comment/$1/$2',
+    'movie/comment/:slug-:id' => 'movie/comment/$1/$2',
     'movie/share/(:any)-(:num)' => 'movie/share/$1/$2',
 
-    // Route cho auth
+    // Route cho auth (user)
     'register' => 'auth/register',
     'login' => 'auth/login',
     'logout' => 'auth/logout',
 
     'search' => 'search/index',
     'search/suggest' => 'search/suggest',
-    'ajax-search' => 'movie/ajax_search'
+    'ajax-search' => 'movie/ajax_search',
+
+    // Route cho admin
+    'admin/login' =>  'admin/auth/login',
+    'admin/register' => 'admin/auth/register',
+    'admin/' =>
 );

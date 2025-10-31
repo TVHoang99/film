@@ -54,7 +54,7 @@ class Controller_Auth extends Controller
         }
 
         // Trả về view cho trang đăng ký trực tiếp
-        return Response::forge(View::forge('auth/register'));
+        return Response::forge(View::forge('client/components/auth/register'));
     }
 
     public function action_login()
@@ -75,14 +75,16 @@ class Controller_Auth extends Controller
             if ($user && password_verify($password, $user->password_hash)) {
                 Session::set('user_id', $user->id);
                 Session::set('username', $user->username);
-                Session::set_flash('success', 'Đăng nhập thành công.');
-                Response::redirect('/');
+                // Session::set_flash('success', 'Đăng nhập thành công.');
+                $current_url = Input::post('current_url');
+                Response::redirect($current_url);
             } else {
                 Session::set_flash('error', 'Tên đăng nhập hoặc mật khẩu không đúng.');
+                Response::redirect('/');
             }
         }
 
-        return Response::forge(View::forge('auth/login'));
+        return Response::forge(View::forge('client/components/auth/login'));
     }
 
     public function action_logout()

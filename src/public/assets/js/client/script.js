@@ -8,6 +8,8 @@ if (typeof jQuery === 'undefined') {
         const searchForm = $('#search-form');
         const searchDropdown = $('#search-dropdown');
         const searchResults = $('#search-results');
+        const commentForm = $('#comment-form');
+        const commentList = $('#comment-list');
 
         if (!searchInput.length || !searchForm.length || !searchDropdown.length || !searchResults.length) {
             console.error('Không tìm thấy phần tử DOM: #search-input, #search-form, #search-dropdown, hoặc #search-results');
@@ -34,7 +36,6 @@ if (typeof jQuery === 'undefined') {
             const query = (input.val() || '').trim(); // Giá trị mặc định là chuỗi rỗng
             console.log('Search query:', query, 'Input value:', input.val());
             if (query.length < 2) {
-                console.log(11111111);
                 searchDropdown.hide();
                 return;
             }
@@ -42,7 +43,6 @@ if (typeof jQuery === 'undefined') {
             // Hiển thị spinner loading
             searchResults.html('<div class="dropdown-item p-2 text-muted"><i class="fas fa-spinner fa-spin me-2"></i> Đang tìm kiếm...</div>');
             searchDropdown.show();
-            console.log(22222222222);
 
             $.ajax({
                 url: '/ajax-search',
@@ -112,5 +112,65 @@ if (typeof jQuery === 'undefined') {
             }
             searchDropdown.hide();
         });
+
+        // Xử lý gửi bình luận qua AJAX
+        if (commentForm.length) {
+            commentForm.on('submit', function (e) {
+                e.preventDefault();
+                const content = $(this).find('textarea[name="content"]').val().trim();
+                const movieId = $(this).attr('data-movie-id');
+                const actionUrl = $(this).attr('action');
+
+                if (content.length < 3) {
+                    alert('Bình luận phải có ít nhất 3 ký tự.');
+                    return;
+                }
+
+                console.log('Sending comment AJAX request:', {
+                    url: actionUrl,
+                    content: content,
+                    movieId: movieId,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                $.ajax({
+                    url: actionUrl,
+                    type: 'POST',
+                    data: { content: content },
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    success: function (response) {
+                        console.log('Comment AJAX response:', response);
+                        if (response.success) {
+                            const newComment = `
+                        <div class="list-group-item mb-2 p-3">
+                            <div class="d-flex justify-content-between">
+                                <strong>${response.user_name}</strong>
+                                <small class="text-gray">${response.created_at}</small>
+                            </div>
+                            <p class="mb-0">${response.comment}</p>
+                        </div>
+                    `;
+                            commentList.prepend(newComment);
+                            commentForm.find('textarea[name="content"]').val('');
+                            alert('Bình luận đã được gửi.');
+                        } else {
+                            console.warn('Comment AJAX error response:', response);
+                            alert(response.error || 'Lỗi khi gửi bình luận.');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Comment AJAX error:', {
+                            status: status,
+                            error: error,
+                            responseText: xhr.responseText ? xhr.responseText.substring(0, 100) : 'No response'
+                        });
+                        alert('Lỗi khi gửi bình luận: ' + (xhr.responseJSON?.error || 'Server trả về dữ liệu không hợp lệ.'));
+                    }
+                });
+            });
+        }
     });
 }

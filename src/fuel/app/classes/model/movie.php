@@ -34,10 +34,11 @@ class Model_Movie extends Orm\Model
             ],
         ],
         'poster_url' => ['data_type' => 'varchar', 'validation' => ['max_length' => 500]],
+        'banner_url' => ['data_type' => 'varchar'],
         'is_featured' => ['data_type' => 'tinyint', 'validation' => ['in_list' => [0, 1]], 'default' => 0],
         'views_count' => ['data_type' => 'int', 'validation' => ['numeric_min' => 0], 'default' => 0],
-        'created_at' => ['data_type' => 'timestamp', 'default' => 'CURRENT_TIMESTAMP'],
-        'updated_at' => ['data_type' => 'timestamp', 'default' => 'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'null' => true],
+        'created_at' => ['data_type' => 'int'],
+        'updated_at' => ['data_type' => 'int'],
     ];
 
     protected static $_observers = [

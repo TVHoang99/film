@@ -55,6 +55,24 @@ body {
     color: #ddd;
 }
 
+.btn-watch-now {
+    color: #ff9216;
+    border: 1px solid #ff9216;
+}
+
+.btn-watch-now:hover {
+    color: #000;
+    background-color: #ff9216;
+}
+
+/* .float-left {
+    float: left;
+}
+
+.float-right {
+    float: left;
+} */
+
 /* Modal */
 .modal-content {
     border-radius: 10px;
@@ -405,13 +423,18 @@ table a:hover {
 
 /* Episode tabs */
 .nav-tabs .nav-link {
-    color: #007bff;
+    border-color: #ff9216;
+    color: #ff9216;
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: #ff9216;
 }
 
 .nav-tabs .nav-link.active {
-    background-color: #007bff;
-    color: #fff;
-    border-color: #007bff;
+    background-color: #ff9216;
+    color: #000;
+    border-color: #ff9216;
 }
 
 .btn-sm {
