@@ -31,5 +31,5 @@ return array(
     // Route cho admin
     'admin/login' =>  'admin/auth/login',
     'admin/register' => 'admin/auth/register',
-    'admin/' =>
+    'admin' => 'admin/home/index',
 );

@@ -12,7 +12,7 @@ class Controller_Admin_Auth extends Controller
                 \Session::set('admin_id', $admin->id);
                 \Session::set('email', $admin->email);
                 \Session::set_flash('success', 'Login successful.');
-                \Response::redirect('task');
+                \Response::redirect('admin');
             } else {
                 \Session::set_flash('error', 'Invalid email or password.');
             }
@@ -26,7 +26,7 @@ class Controller_Admin_Auth extends Controller
         \Session::delete('admin_id');
         \Session::delete('email');
         \Session::set_flash('success', 'Logged out successfully.');
-        \Response::redirect('login');
+        \Response::redirect('admin/login');
     }
 
     public function action_register()
@@ -55,7 +55,7 @@ class Controller_Admin_Auth extends Controller
                     ));
                     if ($admin->save()) {
                         \Session::set_flash('success', 'Admin created successfully.');
-                        \Response::redirect('login');
+                        \Response::redirect('admin/login');
                     } else {
                         \Session::set_flash('error', 'Failed to create admin.');
                     }
