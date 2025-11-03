@@ -128,9 +128,12 @@ class Controller_Movie extends Controller
 		return Service_Layout::render(View::forge('client/movie/detail', $data));
 	}
 
-	public function action_watch($slug, $id, $episode = 1, $language = 'vietsub')
+	public function action_watch($id, $episode = 1, $language = 'vietsub')
 	{
 		// echo "<pre>"; var_dump($slug, $id, $episode, $language); echo "</pre>"; die;
+		$uri_segment = Uri::segment(2); // /phim/SLUG-ID → lấy SLUG-ID
+        $slug = preg_replace('/-\d{6}$/', '', $uri_segment); // bỏ -000074 → kimetsu-noyaiba
+
 		$movie = $this->repository_movie->find_by_options([
 			'where' => [
 				['slug', '=', $slug],
@@ -411,5 +414,86 @@ class Controller_Movie extends Controller
 		}
 
 		return Response::forge(json_encode($results));
+	}
+
+	public function action_reply($slug, $id)
+	{
+		$is_ajax = Input::is_ajax();
+		\Log::debug('action_reply called: slug=' . $slug . ', id=' . $id . ', is_ajax=' . ($is_ajax ? 'true' : 'false'));
+
+		$movie = Model_Movie::find($id);
+		if (!$movie || $movie->slug !== $slug) {
+			if ($is_ajax) {
+				return Response::forge(json_encode(['success' => false, 'error' => 'Phim không tồn tại.']), 404, ['Content-Type' => 'application/json']);
+			}
+			Response::redirect('welcome/404');
+		}
+
+		if (Input::method() !== 'POST') {
+			if ($is_ajax) {
+				return Response::forge(json_encode(['success' => false, 'error' => 'Phương thức không hợp lệ.']), 405, ['Content-Type' => 'application/json']);
+			}
+			Response::redirect('movie/' . $movie->slug . '-' . sprintf('%06d', $movie->id) . '/watch');
+		}
+
+		if (!Session::get('user_id')) {
+			if ($is_ajax) {
+				return Response::forge(json_encode(['success' => false, 'error' => 'Vui lòng đăng nhập.']), 401, ['Content-Type' => 'application/json']);
+			}
+			Response::redirect('auth/login');
+		}
+
+		$parent_id = Input::post('parent_id');
+		$content = Input::post('content', '');
+
+		if (!$parent_id || !is_numeric($parent_id)) {
+			if ($is_ajax) {
+				return Response::forge(json_encode(['success' => false, 'error' => 'Bình luận cha không hợp lệ.']), 400, ['Content-Type' => 'application/json']);
+			}
+			Session::set_flash('error', 'Lỗi trả lời.');
+			Response::redirect('movie/' . $movie->slug . '-' . sprintf('%06d', $movie->id) . '/watch');
+		}
+
+		if (empty($content) || strlen($content) < 2) {
+			if ($is_ajax) {
+				return Response::forge(json_encode(['success' => false, 'error' => 'Trả lời phải có ít nhất 2 ký tự.']), 400, ['Content-Type' => 'application/json']);
+			}
+			Session::set_flash('error', 'Trả lời quá ngắn.');
+			Response::redirect('movie/' . $movie->slug . '-' . sprintf('%06d', $movie->id) . '/watch');
+		}
+
+		$parent_comment = Model_Comment::find($parent_id);
+		if (!$parent_comment || $parent_comment->movie_id != $id) {
+			if ($is_ajax) {
+				return Response::forge(json_encode(['success' => false, 'error' => 'Bình luận cha không tồn tại.']), 404, ['Content-Type' => 'application/json']);
+			}
+			Session::set_flash('error', 'Bình luận cha không tồn tại.');
+			Response::redirect('movie/' . $movie->slug . '-' . sprintf('%06d', $movie->id) . '/watch');
+		}
+
+		$reply = Model_Comment::forge([
+			'movie_id' => $id,
+			'user_id' => Session::get('user_id'),
+			'comment' => $content,
+			'parent_id' => $parent_id,
+			'created_at' => time(),
+		]);
+
+		if ($reply->save()) {
+			if ($is_ajax) {
+				return Response::forge(json_encode([
+					'success' => true,
+					'reply_html' => view_reply_html($reply, $movie, Session::get('user_id') ? true : false),
+				]), 200, ['Content-Type' => 'application/json']);
+			}
+			Session::set_flash('success', 'Đã trả lời bình luận.');
+		} else {
+			if ($is_ajax) {
+				return Response::forge(json_encode(['success' => false, 'error' => 'Lỗi khi gửi trả lời.']), 500, ['Content-Type' => 'application/json']);
+			}
+			Session::set_flash('error', 'Lỗi khi gửi trả lời.');
+		}
+
+		Response::redirect('movie/' . $movie->slug . '-' . sprintf('%06d', $movie->id) . '/watch');
 	}
 }

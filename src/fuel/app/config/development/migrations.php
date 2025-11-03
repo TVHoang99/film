@@ -21,6 +21,7 @@ return array (
         15 => '016_remove_language_episode_video_url_from_movies',
         16 => '017_add_banner_url_to_movies',
         17 => '018_create_admins',
+        18 => '019_add_parent_id_to_comments',
       ),
     ),
     'module' => array(    

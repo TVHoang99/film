@@ -21,6 +21,9 @@ class Model_Comment extends Orm\Model
             'data_type' => 'text',
             'validation' => ['required'],
         ],
+        'parent_id' => [
+            'data_type' => 'int',
+        ],
         'created_at' => [
             'data_type' => 'timestamp',
             'default' => 'CURRENT_TIMESTAMP',
@@ -52,5 +55,15 @@ class Model_Comment extends Orm\Model
             'cascade_save' => true,
             'cascade_delete' => true,
         ],
+    ];
+
+    protected static $_has_many = [
+        'replies' => [
+            'model_to' => 'Model_Comment',
+            'key_from' => 'id',
+            'key_to' => 'parent_id',
+            'cascade_save' => true,
+            'cascade_delete' => false,
+        ]
     ];
 }

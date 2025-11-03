@@ -29,7 +29,7 @@ class Controller_Auth extends Controller
 
             if ($existing_user) {
                 Session::set_flash('error', 'Tên đăng nhập hoặc email đã tồn tại.');
-                Response::redirect('register');
+                Response::redirect('/');
             }
 
             // Tạo user mới
@@ -48,8 +48,8 @@ class Controller_Auth extends Controller
                 // Session::set_flash('success', 'Đăng ký thành công! Chào mừng bạn.');
                 Response::redirect('/');
             } else {
-                // Session::set_flash('error', 'Không thể tạo tài khoản. Vui lòng thử lại.');
-                Response::redirect('register');
+                Session::set_flash('error', 'Không thể tạo tài khoản. Vui lòng thử lại.');
+                Response::redirect('/');
             }
         }
 

@@ -19,6 +19,8 @@ class Model_Movie_Episode extends \Orm\Model
         'video_url' => [
             'data_type' => 'text',
             'validation' => ['required'],
+            'form' => ['type' => false], // Không escape khi render form
+            'escape' => false,           // QUAN TRỌNG: Không escape HTML
         ],
         'created_at' => ['data_type' => 'timestamp', 'default' => 'CURRENT_TIMESTAMP'],
     ];

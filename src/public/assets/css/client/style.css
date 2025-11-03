@@ -460,3 +460,11 @@ table a:hover {
 .content .category {
     margin: 0 10px;
 }
+
+select {
+    font-family: 'FontAwesome', 'Second Font name';
+}
+
+select option:first-child {
+    font-family: Arial, Helvetica, sans-serif;
+}

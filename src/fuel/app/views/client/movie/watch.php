@@ -74,7 +74,7 @@
     <?php endif; ?>
 
     <!-- 3. Chia sẻ -->
-    <div class="mb-5">
+    <!-- <div class="mb-5">
         <h4 class="fw-bold mb-3">Chia sẻ</h4>
         <?php if ($is_logged_in): ?>
             <div class="d-flex gap-2">
@@ -91,7 +91,7 @@
         <?php else: ?>
             <p class="text-gray">Vui lòng <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">đăng nhập</a> để chia sẻ phim.</p>
         <?php endif; ?>
-    </div>
+    </div> -->
 
     <!-- 4. Đánh giá phim (Star rating) -->
     <div class="mb-5">
@@ -100,16 +100,31 @@
             <span class="me-2">Điểm trung bình: <?= $avg_rating ?>/5</span>
             <div class="star-rating">
                 <?php for ($i = 1; $i <= 5; $i++): ?>
-                    <i class="fas fa-star <?= $i <= round($avg_rating) ? 'text-warning' : 'text-muted' ?>"></i>
+                    <!-- <?= (1 > ($i - $avg_rating)) ?
+                                '-half-alt text-warning' :
+                                ' text-gray' ?> -->
+                    <?php if ($i <= floor($avg_rating)): ?>
+                        <i class="fas fa-star text-warning"></i>
+                    <?php else: ?>
+                        <?php if (1 > ($i - $avg_rating)): ?>
+                            <i class="fas fa-star-half-alt text-warning"></i>
+                        <?php else: ?>
+                            <i class="fas fa-star text-gray"></i>
+                        <?php endif; ?>
+                    <?php endif; ?>
                 <?php endfor; ?>
             </div>
         </div>
         <?php if ($is_logged_in): ?>
             <form action="/movie/rate/<?= $movie->id ?>" method="POST" class="d-flex align-items-center gap-2">
                 <select name="rating" class="form-select w-auto">
-                    <option value="">Chọn điểm</option>
+                    <option value="" selected hidden>Vote</option>
                     <?php for ($i = 1; $i <= 5; $i++): ?>
-                        <option value="<?= $i ?>"><?= $i ?> sao</option>
+                        <option value="<?= $i ?>">
+                            <?php for ($j = 1; $j <= $i; $j++): ?>
+                                <span class="text-warning star-voting">&#xf005;</span>
+                            <?php endfor; ?>
+                        </option>
                     <?php endfor; ?>
                 </select>
                 <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
@@ -119,36 +134,88 @@
         <?php endif; ?>
     </div>
 
-    <!-- 5. Bình luận phim -->
-    <div class="mb-5">
-        <h4 class="fw-bold mb-3">Bình luận</h4>
-        <?php if ($is_logged_in): ?>
-            <form action="<?= \Uri::create('/movie/comment/' . $movie->slug . '-' . sprintf('%06d', $movie->id)); ?>" method="POST" id="comment-form" data-movie-id="<?= $movie->id ?>" class="mb-4">
-                <div class="mb-3">
-                    <textarea name="content" class="form-control" rows="4" placeholder="Viết bình luận của bạn..." required></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary"><i class="fas fa-comment"></i> Gửi bình luận</button>
-            </form>
-        <?php else: ?>
-            <div class="alert alert-info">
-                Vui lòng <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">đăng nhập</a> để bình luận.
-            </div>
-        <?php endif; ?>
+    <?php
+    function render_comment($comment, $movie, $is_logged_in, $depth = 0)
+    {
+        $indent = $depth * 40; // Thụt lề 40px mỗi cấp
+        $max_depth = 3; // Giới hạn độ sâu reply (tùy chọn)
+    ?>
+        <div class="list-group-item mb-2 p-3 border-start <?= $depth > 0 ? 'border-primary' : '' ?>"
+            style="margin-left: <?= $indent ?>px;"
+            data-comment-id="<?= $comment->id ?>">
 
-        <div id="comment-list" class="list-group">
-            <?php if (!empty($comments)): ?>
-                <?php foreach ($comments as $comment): ?>
-                    <div class="list-group-item mb-2 p-3">
-                        <div class="d-flex justify-content-between">
-                            <strong><?= e($comment->user->username) ?></strong>
-                            <small class="text-gray"><?= date('d/m/Y H:i', strtotime($comment->created_at)) ?></small>
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong><?= e($comment->user->username) ?></strong>
+                    <small class="text-gray ms-2"><?= date('d/m/Y H:i', strtotime($comment->created_at)) ?></small>
+                </div>
+                <?php if ($is_logged_in && $depth < $max_depth): ?>
+                    <button class="btn btn-sm btn-link text-primary p-0 reply-btn"
+                        data-comment-id="<?= $comment->id ?>">
+                        <i class="fas fa-reply"></i> Trả lời
+                    </button>
+                <?php endif; ?>
+            </div>
+
+            <p class="mb-2 mt-2"><?= nl2br(e($comment->comment)) ?></p>
+
+            <!-- Form trả lời (ẩn mặc định) -->
+            <?php if ($is_logged_in && $depth < $max_depth): ?>
+                <div class="reply-form mt-3" style="display: none;" data-parent-id="<?= $comment->id ?>">
+                    <form action="<?= \Uri::create('/movie/reply/' . $movie->slug . '-' . sprintf('%06d', $movie->id)); ?>"
+                        method="POST" class="reply-submit-form">
+                        <input type="hidden" name="parent_id" value="<?= $comment->id ?>">
+                        <div class="mb-2">
+                            <textarea name="content" class="form-control form-control-sm"
+                                rows="2" placeholder="Viết trả lời..." required></textarea>
                         </div>
-                        <p class="mb-0"><?= nl2br(e($comment->comment)) ?></p>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <p class="text-gray">Chưa có bình luận nào.</p>
+                        <div class="d-flex gap-1">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fas fa-paper-plane"></i> Gửi
+                            </button>
+                            <button type="button" class="btn btn-sm btn-secondary cancel-reply">
+                                Hủy
+                            </button>
+                        </div>
+                    </form>
+                </div>
             <?php endif; ?>
+
+            <!-- Danh sách reply con -->
+            <div class="replies mt-3">
+                <?php
+                $replies = \Model_Comment::query()
+                    ->where('parent_id', $comment->id)
+                    ->related('user')
+                    ->order_by('created_at', 'ASC')
+                    ->get();
+                ?>
+                <?php foreach ($replies as $reply): ?>
+                    <?= render_comment($reply, $movie, $is_logged_in, $depth + 1); ?>
+                <?php endforeach; ?>
+            </div>
         </div>
-    </div>
+    <?php
+    }
+
+    function view_reply_html($reply, $movie, $is_logged_in)
+    {
+        ob_start(); ?>
+        <div class="list-group-item mb-2 p-3 border-start border-primary" style="margin-left: 40px;" data-comment-id="<?= $reply->id ?>">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong><?= e($reply->user->username) ?></strong>
+                    <small class="text-gray ms-2"><?= date('d/m/Y H:i', strtotime($reply->created_at)) ?></small>
+                </div>
+                <?php if ($is_logged_in): ?>
+                    <button class="btn btn-sm btn-link text-primary p-0 reply-btn" data-comment-id="<?= $reply->id ?>">
+                        <i class="fas fa-reply"></i> Trả lời
+                    </button>
+                <?php endif; ?>
+            </div>
+            <p class="mb-0 mt-2"><?= nl2br(e($reply->comment)) ?></p>
+        </div>
+    <?php return ob_get_clean();
+    }
+    ?>
 </section>

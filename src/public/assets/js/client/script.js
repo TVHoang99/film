@@ -172,5 +172,53 @@ if (typeof jQuery === 'undefined') {
                 });
             });
         }
+
+        // Xử lý reply
+        $(document).on('click', '.reply-btn', function () {
+            const commentId = $(this).data('comment-id');
+            const $form = $(this).closest('[data-comment-id]').find('.reply-form').first();
+            $('.reply-form').not($form).slideUp();
+            $form.slideToggle();
+        });
+
+        // Submit reply
+        $(document).on('submit', '.reply-submit-form', function (e) {
+            e.preventDefault();
+            const $form = $(this);
+            const content = $form.find('textarea').val().trim();
+            const parentId = $form.find('input[name="parent_id"]').val();
+            const actionUrl = $form.attr('action');
+
+            if (content.length < 2) {
+                alert('Trả lời phải có ít nhất 2 ký tự.');
+                return;
+            }
+
+            $.ajax({
+                url: actionUrl,
+                type: 'POST',
+                data: { parent_id: parentId, content: content },
+                dataType: 'json',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function (response) {
+                    if (response.success) {
+                        const $replies = $form.closest('[data-comment-id]').find('.replies').first();
+                        $replies.append(response.reply_html);
+                        $form[0].reset();
+                        $form.slideUp();
+                    } else {
+                        alert(response.error || 'Lỗi khi gửi trả lời.');
+                    }
+                },
+                error: function () {
+                    alert('Lỗi kết nối server.');
+                }
+            });
+        });
+
+        // Hủy reply
+        $(document).on('click', '.cancel-reply', function () {
+            $(this).closest('.reply-form').slideUp();
+        });
     });
 }

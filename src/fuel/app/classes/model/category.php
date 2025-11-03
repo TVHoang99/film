@@ -45,4 +45,12 @@ class Model_Category extends Orm\Model
             'cascade_delete' => true,
         ],
     ];
+
+    public static function validate($factory)
+    {
+        $val = \Validation::forge($factory);
+        $val->add_field('name', 'Name', 'required|max_length[100]');
+        $val->add_field('description', 'Description', 'required|max_length[500]');
+        return $val;
+    }
 }

@@ -54,3 +54,7 @@
     background-color: var(--bs-body-bg);
     border-top: 0;
 }
+
+.card {
+    height: fit-content;
+}

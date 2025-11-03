@@ -10,6 +10,7 @@ class Controller_Admin_Auth extends Controller
             $admin = Model_Admin::validate_login($email, $password);
             if ($admin) {
                 \Session::set('admin_id', $admin->id);
+                \Session::set('adminname', $admin->adminname);
                 \Session::set('email', $admin->email);
                 \Session::set_flash('success', 'Login successful.');
                 \Response::redirect('admin');

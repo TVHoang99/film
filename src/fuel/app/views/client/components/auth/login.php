@@ -1,5 +1,5 @@
 <!-- Modal Đăng Nhập -->
-<div class="modal fade<?php echo !empty(Session::get_flash('error')) ? ' show' : '' ?>" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark">
             <div class="modal-header">
